@@ -1,68 +1,179 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Custom Hooks React.js
 
-## Available Scripts
+## Setup
 
-In the project directory, you can run:
+ - Install dependences:
+> yarn
 
-### `yarn start`
+## Start application
+ - After install all dependeces, run the command below
+> yarn start
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Examples
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+### 1 - useCounter - it's a customized hook to increment and decrement a counter
 
-### `yarn test`
+**Counter.js**
+```javascript
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+import React from 'react';
+import useCounter from './custom-hooks/useCounter';
 
-### `yarn build`
+// import { Container } from './styles';
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+function Counter() {
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+  const {count, increment, decrement} = useCounter();
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  return (
+    <div>
+      <h1>{count}</h1>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Increment</button>
+    </div>
+  );
+}
 
-### `yarn eject`
+export default Counter;
+```
+**useCounter.js**
+```javascript
+import { useState, useCallback } from 'react';
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+function useCounter() {
+  const [count, setCount] = useState(0);
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+  const increment = useCallback(() => {
+    setCount(count + 1);
+  });
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+  const decrement = useCallback(() => {
+    setCount(count - 1);
+  });
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+  return { count, increment, decrement };
+}
 
-## Learn More
+export default useCounter;
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+<hr>
 
-### Code Splitting
+## 2 - useRequest - it's a custom hooks to make a request url
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+**ListUsers.js**
+```javascript
+import React from 'react';
+import useRequest from './custom-hooks/useRequest';
 
-### Analyzing the Bundle Size
+function ListUsers() {
+  
+  const [state, getData] = useRequest('https://jsonplaceholder.typicode.com/users');
+  
+  return (
+    <div>
+      <ul>
+        {
+          state && 
+          state.map((item) => (
+            <li key={item.id}>{item.name}</li>
+          ))
+        }
+      </ul>
+      <button onClick={getData}>List Users</button>
+    </div>
+  );
+}
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+export default ListUsers;
 
-### Making a Progressive Web App
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+**useRequest**
+```javascript
+import { useState } from 'react';
+import axios from 'axios';
 
-### Advanced Configuration
+function useRequest(url) {
+  const [state, setState] = useState([]);
+  
+  const getData = async () => {
+    const { data } = await axios.get(url);
+    setState(data);
+  };
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+  return [state, getData];
+}
 
-### Deployment
+export default useRequest;
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+```
 
-### `yarn build` fails to minify
+<hr>
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+## 4 - useInput - it's a custom hooks to bind and reset value input
+
+**Form.js**
+```javascript
+import React from 'react';
+import useInput from './custom-hooks/useInput';
+
+function Form() {
+
+  const [firstName, bindFirstName, resetFirstName] = useInput('');
+  const [lastName, bindLastName, resetLastName] = useInput('');
+  
+  const submitHandler = () => {
+    alert(`Welcome ${firstName} ${lastName}`);
+    resetFirstName();
+    resetLastName();
+  };
+
+  return (
+    <div>
+      <form onSubmit={submitHandler}>
+        <label>First Name</label>
+        <input
+          type="text"
+          {...bindFirstName}
+        />
+        <label>Last Name</label>
+        <input
+          type="text"
+          {...bindLastName}
+        />
+        <button type='submit'>Submit</button>
+      </form>
+    </div>
+  );
+}
+
+export default Form;
+```
+
+**useInput.js**
+```javascript
+import { useState } from 'react';
+
+function useInput(initialValue) {
+  
+  const [value, setValue] = useState(initialValue);
+
+  const bind ={
+    value,
+    onChange: e => {
+      setValue(e.target.value);
+    },
+  };
+
+  const resetValue = () => {
+    setValue(initialValue);
+  }
+
+  return [value, bind, resetValue];
+
+}
+
+export default useInput;
+```
